@@ -77,8 +77,6 @@ func DialContext(ctx context.Context, network, address string, options ...Option
 }
 
 func ListenPacket(ctx context.Context, network, address string, rAddrPort netip.AddrPort, options ...Option) (net.PacketConn, error) {
-	opt := applyOptions(options...)
-
 	lc := &net.ListenConfig{}
 
 	if DefaultSocketHook != nil { // ignore interfaceName, routingMark when DefaultSocketHook not null (in CMFA)
