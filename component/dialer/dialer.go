@@ -142,10 +142,11 @@ func dialContext(ctx context.Context, network string, destination netip.Addr, po
 
 	if DefaultSocketHook != nil { // ignore interfaceName, routingMark and tfo when DefaultSocketHook not null (in CMFA)
 		socketHookToToDialer(dialer)
-	} else {
-		if opt.interfaceName == "" {
-			opt.interfaceName = DefaultInterface.Load()
-		}
+		return dialer.DialContext(ctx, network, address)
+	}
+
+	if opt.interfaceName == "auto" {
+		opt.interfaceName = DefaultInterface.Load()
 		if opt.interfaceName == "" {
 			if finder := DefaultInterfaceFinder.Load(); finder != nil {
 				opt.interfaceName = finder.FindInterfaceName(destination)
@@ -160,15 +161,16 @@ func dialContext(ctx context.Context, network string, destination netip.Addr, po
 				return nil, err
 			}
 		}
-		if opt.routingMark == 0 {
-			opt.routingMark = int(DefaultRoutingMark.Load())
-		}
-		if opt.routingMark != 0 {
-			bindMarkToDialer(opt.routingMark, dialer, network, destination)
-		}
-		if opt.tfo && !DisableTFO {
-			return dialTFO(ctx, *dialer, network, address)
-		}
+	}
+
+	if opt.routingMark == 0 {
+		opt.routingMark = int(DefaultRoutingMark.Load())
+	}
+	if opt.routingMark != 0 {
+		bindMarkToDialer(opt.routingMark, dialer, network, destination)
+	}
+	if opt.tfo && !DisableTFO {
+		return dialTFO(ctx, *dialer, network, address)
 	}
 
 	return dialer.DialContext(ctx, network, address)
